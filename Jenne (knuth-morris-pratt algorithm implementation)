@@ -1,0 +1,67 @@
+#include <iostream>
+using namespace std;
+
+int* computePrefixSuffixArray(const string& pattern){
+    int length = pattern.size();
+    int* prefixSuffix = new int[length]();
+    int prevPrefixSuffix = 0;
+    int iterator = 1;
+    
+    prefixSuffix[0] = 0;
+    while(iterator < length){
+        if(pattern[iterator] == pattern[prevPrefixSuffix]){
+            prevPrefixSuffix++;
+            prefixSuffix[iterator] = prevPrefixSuffix;
+            iterator++;
+        } else if(pattern[iterator] != pattern[prevPrefixSuffix]){
+            if(prevPrefixSuffix != 0){
+                prevPrefixSuffix = prefixSuffix[prevPrefixSuffix-1];
+            } else {
+                prefixSuffix[iterator] = prevPrefixSuffix;
+                iterator++;
+            }
+        }
+    }
+    return prefixSuffix;
+}
+
+char convertChar(const char& c){
+    if(c == ' ') return ' ';
+    else if(c >= 'A' && c <= 'Z') return 'A';
+    else if(c >= 'a' && c <= 'z') return 'a';
+    else if(c >= '0' && c <= '9') return '0';
+    else if(c == '.' || c == '?' || c == '!' || c == ',' || c == ';' || c == ':' || c == '-') return '.';
+    else return ' ';
+}
+
+int main(){
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+    
+    string pattern;
+    getline(cin, pattern);
+
+    int* prefixSuffixArray = computePrefixSuffixArray(pattern);
+
+    unsigned int counter = 0;
+    char c = cin.get();
+    while(c != '\n'){
+        char letter = convertChar(c);
+        if(letter == pattern[counter]){
+            counter++;
+            if(counter == pattern.length()){
+                cout << "T\n";
+                return 0;
+            }
+        } else if(counter > 0){
+            counter = prefixSuffixArray[counter-1];
+            continue;
+        }
+        c = cin.get();
+    }
+
+    delete[] prefixSuffixArray;
+    cout << "N\n";
+    return 0;
+}
