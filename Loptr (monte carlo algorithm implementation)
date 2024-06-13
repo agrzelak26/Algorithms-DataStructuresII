@@ -1,0 +1,56 @@
+#include <iostream>
+#include <iomanip>
+#include <ctime>
+#include <cstdlib>
+
+using namespace std;
+
+double calculateProbability(const string& startTime, const string& endTime, int dimension, int numSimulations = 10000) {
+    tm start = {};
+    tm end = {};
+
+    sscanf(startTime.c_str(), "%d:%d", &start.tm_hour, &start.tm_min);
+    sscanf(endTime.c_str(), "%d:%d", &end.tm_hour, &end.tm_min);
+
+    if((end.tm_hour < start.tm_hour) || (end.tm_hour == start.tm_hour && end.tm_min <= start.tm_min)) {
+        end.tm_hour += 24;
+    }
+
+    int startSeconds = start.tm_hour*3600 + start.tm_min*60;
+    int endSeconds = end.tm_hour*3600 + end.tm_min*60;
+    int deltaSeconds = endSeconds - startSeconds;
+
+    int dimensionCount = 0;
+
+    srand(time(nullptr));
+
+    for(int i=0; i<numSimulations; i++) {
+        int randomSeconds = rand() % deltaSeconds;
+        int randomHour = start.tm_hour + randomSeconds/3600;
+        int randomMinute = (start.tm_min+(randomSeconds%3600)/60)%60;
+
+        if(randomHour >= 24){ 
+            randomHour -= 24;
+        }
+        if(Loptr(randomHour, randomMinute) == dimension){
+            dimensionCount++;
+        }
+    }
+
+    return static_cast<double>(dimensionCount)/numSimulations;
+}
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+    string startTime, endTime;
+    int dimension;
+
+    cin >> startTime >> endTime >> dimension;
+
+    double probability = calculateProbability(startTime, endTime, dimension);
+    cout << fixed << setprecision(2) << probability << endl;
+
+    return 0;
+}
