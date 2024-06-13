@@ -1,0 +1,104 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+#include <iomanip>
+#include <stack>
+#include <limits>
+using namespace std;
+
+struct Point {
+    double x, y;
+};
+
+//obliczanie iloczynu wektorowego (okresla, czy punkt tworzy zakret w lewo, w prawo czy jest wspolliniowy z innym punktem)
+double cross(const Point& O, const Point& A, const Point& B) {
+    return (A.x-O.x)*(B.y-O.y) - (A.y-O.y)*(B.x-O.x);
+}
+
+double distance(const Point& A, const Point& B) {
+    return hypot(A.x - B.x, A.y - B.y); //hypot oblicza odleglosc pomiedzy punktami O(1)
+}
+
+//sortowanie punktów względem kąta i odległości względem punktu P0 (po wspolrzednych polarnych)
+bool polarOrder(const Point& P0, const Point& A, const Point& B) {
+    double order = cross(P0, A, B);
+    if(order == 0){
+        return distance(P0, A) < distance(P0, B);
+    }
+    return order > 0;
+}
+
+//obliczanie pola wielokąta (otoczki wypukłej) za pomocą wzoru Gaussa
+// P = 1/2 |(suma(XiYi+1 - YiXi+1))|
+double polygonArea(const vector<Point>& points) {
+    double area = 0; //pole wielokata
+    int n = points.size(); //liczba punktow
+    for(int i=0; i<n; i++) {
+        int j = (i+1)%n;
+        area += points[i].x * points[j].y;
+        area -= points[j].x * points[i].y;
+    }
+    return abs(area)/2.0;
+}
+
+//algolrytm grahama - wyszukiwanie najmniejszej otoczki wypuklej
+vector<Point> graham(vector<Point>& uniquePoints, const Point& P0){
+    vector<Point> hull;
+    hull.push_back(P0);
+    hull.push_back(uniquePoints[0]);
+
+    for(size_t i=1; i<uniquePoints.size(); i++){
+        while(hull.size() > 1 && cross(hull[hull.size()-2], hull.back(), uniquePoints[i]) <= 0) {
+            hull.pop_back();
+        }
+        hull.push_back(uniquePoints[i]);
+    }
+    return hull;
+}
+
+int main(){
+    int n;
+    cin >> n;
+    
+    if(n == 0){
+        cout << fixed << setprecision(3) << 0.000 << endl;
+        return 0;
+    }
+    
+    vector<Point> points(n);
+    Point P0 = {numeric_limits<double>::max(), numeric_limits<double>::max()}; // inicjalizacja bieguna najwieksza wartoscia
+    
+    for(int i=0; i<n; i++) {
+        cin >> points[i].x >> points[i].y;
+        if((points[i].y < P0.y) || (points[i].y == P0.y && points[i].x < P0.x)) {
+            P0 = points[i]; //szukanie bieguna przy wczytywaniu
+        }
+    }
+    
+    //sortowanie wzgledem wspolrzednych polarnych
+    sort(points.begin(), points.end(), [&](const Point& A, const Point& B){
+        return polarOrder(P0, A, B);
+    });
+
+    // usunięcie punktów na tej samej linii (pozostawienie najdalszego)
+    vector<Point> uniquePoints;
+    uniquePoints.push_back(points[0]);
+    for(int i=1; i<n; i++) {
+        while(i < n-1 && cross(P0, points[i], points[i+1]) == 0) {
+            i++;
+        }
+        uniquePoints.push_back(points[i]);
+    }
+    
+    // Implementacja algorytmu Grahama
+    vector<Point> hull = graham(uniquePoints, P0);
+    
+    // Obliczenie pola otoczki wypukłej
+    double area = polygonArea(hull);
+
+    // Wypisanie wyniku z dokładnością do 3 miejsc po przecinku
+    cout << fixed << setprecision(3) << area << endl;
+
+    return 0;
+}
