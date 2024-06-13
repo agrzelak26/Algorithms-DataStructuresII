@@ -1,0 +1,64 @@
+#include <iostream>
+#include <vector>
+#include <cmath>
+
+using namespace std;
+
+
+double integrateUsingTrapezoids(double (*f)(double), double a, double b, int n) {
+    double sum = 0.0;
+    double width = (b-a)/n;
+    
+    for(int i=0; i<n; i++) {
+        double x1 = a+i*width;
+        double x2 = a+(i+1)*width;
+        double fx1 = f(x1);
+        double fx2 = f(x2);
+        if(fx1 > 0 && fx2 > 0) {
+            sum += (fx1*fx1 + fx2*fx2)*width/2.0;
+        }
+    }
+
+    return sum * M_PI;
+}
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+    //dlugosc, szerokosc, wysokosc
+    int x, y, z;
+    cin >> x >> y >> z;
+    
+    double aquariumVolume = static_cast<double>(x)*y*z;
+    
+    double fillingDegree;
+    cin >> fillingDegree;
+    
+    //poczatkowy poziom wody
+    double initialWaterVolume = aquariumVolume*fillingDegree;
+    
+    int numBottles;
+    cin >> numBottles;
+    
+    vector<double> heights(numBottles);
+    for(int i=0; i<numBottles; i++){
+        cin >> heights[i];
+    }
+    
+    //aktualny poziom wody
+    double currentWaterVolume = initialWaterVolume;
+    
+    //ktora butelka wypelni akwarium
+    for(int i=0; i<numBottles; i++) {
+        double bottleVolume = integrateUsingTrapezoids(butelka, 0, heights[i], 1000);
+        currentWaterVolume += bottleVolume;
+        if(currentWaterVolume > aquariumVolume){
+            cout << i+1 << endl;
+            return 0;
+        }
+    }
+    
+    cout << "NIE" << endl;
+    return 0;
+}
