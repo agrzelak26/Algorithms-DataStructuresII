@@ -1,0 +1,104 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <limits>
+#include <utility>
+using namespace std;
+
+struct Edge {
+    int to;
+    int weight;
+};
+
+struct Point{
+    long int x, y;
+    int index;
+};
+
+int calculateCost(int first, int second){
+    return second - first;
+}
+
+bool comparePointsByX(const Point& a, const Point& b) {
+        return a.x < b.x;
+}
+
+bool comparePointsByY(const Point& a, const Point& b) {
+        return a.y < b.y;
+}
+
+int dijkstry(const vector<vector<Edge>>& adjacencyList, int s, int d) {
+    int n = adjacencyList.size();
+    vector<int> dist(n, numeric_limits<int>::max());
+    dist[s] = 0;
+
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+    pq.push({0, s});
+
+    while(!pq.empty()) {
+        int u = pq.top().second;
+        pq.pop();
+
+        for (const auto& edge : adjacencyList[u]) {
+            int v = edge.to;
+            int cost = edge.weight;
+            if (dist[v] > dist[u] + cost) {
+                dist[v] = dist[u] + cost;
+                pq.push({dist[v], v});
+            }
+        }
+    }
+
+    return dist[d];
+}
+
+int main(){
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+
+    int n;
+    cin >> n;
+    vector<Point> points(n);
+    vector<vector<Edge>> adjacencyList(n);
+
+    for(int i=0; i<n; i++){
+        cin >> points[i].x >> points[i].y;
+        points[i].index = i;
+    }
+
+    int s, d;
+    cin >> s >> d;
+
+    sort(points.begin(), points.end(), comparePointsByX);
+    for(int i=0; i<n-1; i++){
+        adjacencyList[points[i].index].push_back({points[i+1].index, calculateCost(points[i].x, points[i+1].x)});
+        adjacencyList[points[i+1].index].push_back({points[i].index, calculateCost(points[i].x, points[i+1].x)});
+    }
+    sort(points.begin(), points.end(), comparePointsByY);
+    for(int i=0; i<n-1; i++){
+        int currIndex = points[i].index;
+        int nextIndex = points[i+1].index;
+        int cost = calculateCost(points[i].y, points[i+1].y);
+
+        bool edgeExists = false;
+        for(auto& edge : adjacencyList[currIndex]){
+            if(edge.to == nextIndex){
+                edgeExists = true;
+                if(edge.weight > cost){
+                    edge.weight = cost;
+                    break;
+                }
+            }
+        }
+        if(!edgeExists){
+            adjacencyList[currIndex].push_back({nextIndex, cost});
+            adjacencyList[nextIndex].push_back({currIndex, cost});
+        }
+    }
+    int shortestDistance = dijkstry(adjacencyList, s, d);
+    cout << shortestDistance << endl;
+
+    return 0;
+}
