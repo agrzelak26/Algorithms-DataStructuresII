@@ -1,0 +1,65 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <climits>
+#include <iomanip>
+using namespace std;
+
+struct Edge{
+    int to;
+    double weight;
+};
+
+void prime(const vector<vector<Edge>>& adj){
+    int V = adj.size();
+    priority_queue<pair<double, int>> priorityQueue;
+    vector<double> key(V, INT_MIN);
+    vector<int> parent(V, -1);
+    vector<bool> visited(V, false);
+    double result = 1;
+
+    int start = 0;
+
+    priorityQueue.push(make_pair(0, start));
+    key[start] = 0;
+
+    while(!priorityQueue.empty()){
+        int u = priorityQueue.top().second;
+        priorityQueue.pop();
+        visited[u] = true;
+
+        for(auto& neighbor : adj[u]){
+            int v = neighbor.to;
+            double weight = neighbor.weight;
+
+            if(!visited[v] && key[v] < weight){
+                key[v] = weight;
+                priorityQueue.push(make_pair(key[v], v));
+                parent[v] = u;
+            }
+        }
+    }
+
+    for(int i=1; i<V; i++){
+        result *= key[i];
+    }
+    cout << fixed << setprecision(5) << result << endl;
+}
+
+int main(){
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+    int n, m;
+    cin >> n >> m;
+    int first, second;
+    double weight;
+    vector<vector<Edge>> adjacencyList(n);
+    for(int i=0; i<m; i++){
+        cin >> first >> second >> weight;
+        adjacencyList[first].push_back({second, weight});
+        adjacencyList[second].push_back({first, weight});
+    }
+    prime(adjacencyList);
+    return 0;
+}
