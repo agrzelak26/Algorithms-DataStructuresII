@@ -1,0 +1,85 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <cmath>
+
+using namespace std;
+
+const long long int modulo = 101;
+
+long long int rollingHash(vector<long long int>& arr, long long int length) {
+    long long int hashValue = 0;
+    for (long long int i=0; i<length; i++) {
+        hashValue += arr[i]*pow(modulo, i);
+    }
+    return hashValue;
+}
+
+long long int recalculateHash(vector<long long int>& arr, long long int oldIndex, long long int newIndex, long long int oldHash, long long int patternLength) {
+    long long int newHash = oldHash-arr[oldIndex];
+    newHash /= modulo;
+    newHash += arr[newIndex]*pow(modulo, patternLength-1);
+    return newHash;
+}
+
+
+vector<long long int> rabinKarp(vector<long long int>& text, vector<long long int>& pattern){
+    vector<long long int> indices;
+    long long int textLength = text.size();
+    long long int patternLength = pattern.size();
+    long long int patternHash = rollingHash(pattern, patternLength);
+    long long int textHash = rollingHash(text, patternLength);
+
+    for(long long int i=0; i<=textLength-patternLength; i++) {
+        if(textHash == patternHash){
+            bool match = true;
+            for(long long int j=0; j<patternLength; j++){
+                if(text[i+j] != pattern[j]){
+                    match = false;
+                    break;
+                }
+            }
+            if(match)
+                indices.push_back(i);
+        }
+        if(i < textLength-patternLength)
+            textHash = recalculateHash(text, i, i+patternLength, textHash, patternLength);
+    }
+    return indices;
+}
+
+int main(){
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+    long long int v;
+    cin >> v;
+
+    vector<long long int> orbits(v);
+    for(long long int i=0; i<v; i++){
+        cin >> orbits[i];
+    }
+
+    long long int p;
+    cin >> p;
+
+    vector<long long int> pattern(p);
+    for(long long int i=0; i<p; i++){
+        cin >> pattern[i];
+    }
+
+    vector<long long int> indices = rabinKarp(orbits, pattern);
+    long long int first = indices[0];
+    long long int second = indices[1];
+    for(long long int i=0;;i++){
+        long long int sum = first + second;
+        if(sum >= v){
+            cout << sum - v << "\n";
+            break;
+        }
+        first = second;
+        second = sum;
+    }
+    
+    return 0;
+}
